@@ -1,0 +1,37 @@
+name: Build TweakXL 2.5
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Update RED4ext SDK to 2.5
+        shell: pwsh
+        run: |
+          git -C vendor/RED4ext.SDK fetch --depth=1 https://github.com/wopss/RED4ext.SDK.git master
+          git -C vendor/RED4ext.SDK checkout --detach FETCH_HEAD
+
+      - name: Install Xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+
+      - name: Build TweakXL
+        run: |
+          xmake f -p windows -a x64 -m release -y
+          xmake -y
+
+      - name: Upload TweakXL.dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: TweakXL-Cyberpunk-2.5
+          path: build/**/TweakXL.dll
